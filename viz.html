@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<title>Metros</title>
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.dot {
+  stroke: #000;
+}
+
+
+.node {
+  cursor: pointer;
+}
+
+.dot {
+  opacity: .7;
+  cursor: pointer;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: rgb(31, 119, 180);
+  shape-rendering: crispEdges;
+}
+
+text {
+  stroke: none;
+  fill: #666666;
+  font-size: .9em;
+  font-family: "Helvetica Neue"
+}
+
+</style>
+</head>
+<body>
+
+<script src="//d3js.org/d3.v3.min.js"></script>
+
+<script>
+
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var x = d3.scale.linear()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var color = d3.scale.category10();
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.json("metros.json", function(error, data) {
+  if (error) throw error;
+
+  data = data.filter(function(d) {
+      if (!d.length || !d.ridership) return false;
+      return d.city_population > 10e6;
+  });
+
+  var x_field = 'length';
+  var y_field = 'ridership';
+  var xs = [];
+  var ys = [];
+
+  data.forEach(function(d) {
+      console.log(d);
+    d.x = d[x_field];
+    d.y = d[y_field];
+    d.r = d.city_population / 1e6;
+    xs.push(d.x);
+    ys.push(d.y);
+  });
+
+  var xs = data.map(function(d) { return d.x; });
+  var ys = data.map(function(d) { return d.y; });
+  var x_extent = d3.extent(xs);
+  var y_extent = d3.extent(ys);
+  x.domain(x_extent).nice();
+  y.domain(y_extent).nice();
+
+  //var x_axis_shift = height - (height * (d3.median(ys) / y_extent[1]));
+  //var y_axis_shift = (width * (d3.median(xs) / x_extent[1]));
+  var x_axis_shift = height / 2.0;
+  var y_axis_shift = width / 2.0;
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(" + 0 + "," + x_axis_shift + ")")
+      .call(xAxis)
+     .append("text")
+      .attr("class", "label")
+      .attr("x", width)
+      .attr("y", -6)
+      .style("text-anchor", "end")
+      .text(x_field);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .attr("transform", "translate(" + y_axis_shift + "," + 0 + ")")
+      .call(yAxis)
+     .append("text")
+      .attr("class", "label")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text(y_field)
+
+  var gdots = svg.selectAll("g.dot")
+            .data(data)
+            .enter().append('g');
+
+  gdots.append("circle")
+            .attr("class", "dot")
+            .attr("r", function (d) {
+                return d.r;
+            })
+            .attr("cx", function (d) {
+                return x(d.x);
+            })
+            .attr("cy", function (d) {
+                return y(d.y);
+            })
+            .style("fill", function (d) {
+                return d.c;
+            });
+
+  gdots.append("text")
+            .text(function (d){
+            	return d.name;
+            })
+            .style("font-size", "12px")
+            .attr("x", function (d) {
+                return x(d.x);
+            })
+            .attr("y", function (d) {
+                return y(d.y);
+            });
+
+});
+
+</script>
+
+</body>
+</html>
