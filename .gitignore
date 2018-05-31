@@ -102,3 +102,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Downloaded data
+List_of_metro_systems.html
+_resource_cache.json
